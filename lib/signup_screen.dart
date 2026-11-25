@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -9,8 +10,20 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _apiService = ApiService();
 
   final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _showMessage(BuildContext context, String text) {
     showDialog(
@@ -48,6 +61,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                   // Поле 1: Ім'я
                   TextFormField(
+                    controller: _nameController,
                     decoration: const InputDecoration(
                       labelText: 'User Name',
                     ),
@@ -60,7 +74,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Поле 2: Email / Login
                   TextFormField(
+                    controller: _emailController,
                     decoration: const InputDecoration(
                       labelText: 'Email / Login',
                     ),
@@ -76,7 +92,9 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Поле 3: Пароль
                   TextFormField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'Password',
@@ -94,9 +112,20 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 16),
 
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        _showMessage(context, 'Registration successful');
+                        try {
+                          await _apiService.signUp(
+                            _nameController.text.trim(),
+                            _emailController.text.trim(),
+                            _passwordController.text,
+                          );
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Registration successful');
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Помилка відправки: $e');
+                        }
                       }
                     },
                     child: const Text('Register'),

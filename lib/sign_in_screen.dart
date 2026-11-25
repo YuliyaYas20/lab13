@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 import 'signup_screen.dart';
 import 'reset_password_screen.dart';
 
@@ -11,6 +12,16 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _loginController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _apiService = ApiService();
+
+  @override
+  void dispose() {
+    _loginController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _showMessage(BuildContext context, String text) {
     showDialog(
@@ -40,9 +51,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 8),
 
-
                   // Поле логіну
                   TextFormField(
+                    controller: _loginController,
                     decoration: const InputDecoration(
                       labelText: 'Login',
                     ),
@@ -55,7 +66,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Поле пароля
                   TextFormField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
                       labelText: 'Password',
@@ -73,9 +86,19 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 16),
 
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        _showMessage(context, 'Login successful');
+                        try {
+                          await _apiService.login(
+                            _loginController.text.trim(),
+                            _passwordController.text,
+                          );
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Login successful');
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Помилка відправки: $e');
+                        }
                       }
                     },
                     child: const Text('Login'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'api_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -9,8 +10,16 @@ class ResetPasswordScreen extends StatefulWidget {
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _apiService = ApiService();
 
   final _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
 
   void _showMessage(BuildContext context, String text) {
     showDialog(
@@ -40,7 +49,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
                   const SizedBox(height: 8),
 
-
                   const Text(
                     'Reset Password',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
@@ -48,6 +56,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const SizedBox(height: 24),
 
                   TextFormField(
+                    controller: _emailController,
                     decoration: const InputDecoration(
                       labelText: 'Login or Email',
                     ),
@@ -64,9 +73,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const SizedBox(height: 16),
 
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (_formKey.currentState!.validate()) {
-                        _showMessage(context, 'Reset instructions sent');
+                        try {
+                          await _apiService.resetPassword(
+                            _emailController.text.trim(),
+                          );
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Reset instructions sent');
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          _showMessage(context, 'Помилка відправки: $e');
+                        }
                       }
                     },
                     child: const Text('Reset'),
